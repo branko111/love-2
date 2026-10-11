@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>love.s111.com</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<link rel="icon" href="s.png" type="image/png">
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+:root{--bg:#0f1226;--card:#ffffff14;--tx:#f3f4ff;--sz:clamp(46px,9.5vw,76px)}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;font-family:system-ui,Segoe UI,Roboto,sans-serif;color:var(--tx);
+background:radial-gradient(circle at 20% 0,#2b1f5c,transparent 50%),radial-gradient(circle at 90% 30%,#4a1d3f,transparent 45%),var(--bg);
+padding:env(safe-area-inset-top) 12px env(safe-area-inset-bottom)}
+header{max-width:1100px;margin:0 auto;padding:14px 0 4px;display:flex;justify-content:space-between;align-items:center}
+h1{font-size:1.1rem;margin:0;letter-spacing:.08em;font-weight:600}
+#net{font-size:.75rem;opacity:.75}
+nav{max-width:1100px;margin:10px auto;display:flex;flex-wrap:wrap;gap:14px;justify-content:space-between;align-items:center;
+background:var(--card);backdrop-filter:blur(12px);border:1px solid #ffffff22;border-radius:26px;padding:16px;animation:in .7s both}
+@keyframes in{from{opacity:0;transform:translateY(-14px)}}
+.c{width:var(--sz);height:var(--sz);border-radius:50%;flex:none;display:grid;place-items:center;text-align:center;position:relative;
+cursor:pointer;font-weight:700;font-size:calc(var(--sz)*.26);line-height:1.1;color:#fff;user-select:none;border:0;padding:0;
+box-shadow:0 6px 18px #0006;transition:transform .25s,background .35s,box-shadow .25s;background-size:cover;background-position:center}
+.c:hover{transform:translateY(-4px) scale(1.07);box-shadow:0 10px 24px #0008}
+.c:active{transform:scale(.93)}
+.c::after{content:attr(data-tip);position:absolute;top:calc(100% + 8px);left:50%;transform:translate(-50%,-4px);background:#000d;color:#fff;
+font:500 .72rem system-ui;padding:6px 9px;border-radius:8px;white-space:nowrap;opacity:0;pointer-events:none;transition:.2s;z-index:20;max-width:70vw}
+.c:hover::after{opacity:1;transform:translate(-50%,0)}
+#c1{background:#fff url(s.png) center/70% no-repeat}
+#c2{background:#2f7bff}#c2.f{background:#f0364f}
+#c3{background:#a6e8a0;color:#16401a}#c3.on{background:#1b7a2e;color:#fff}
+#c4{background:#8fd0ff;color:#0b2c4d}#c4.on{background:#0b4fa8;color:#fff}
+#c4.ph{border:4px solid #8fd0ff}#c4.ph.on{border-color:#0b4fa8}
+#c5{background:#ffd23d;color:#4a3800}
+#c6{background:#0b2a6f}
+#c7{background:#ff8a1f;font-size:calc(var(--sz)*.21)}
+#info{flex:1 1 150px;min-height:var(--sz);border-radius:18px;background:#25d36633;border:1px solid #25d36688;padding:8px 12px;display:flex;flex-direction:column;justify-content:center;font-size:.8rem}
+#info input{background:#0004;border:1px solid #fff3;border-radius:8px;color:#fff;padding:6px;width:100%;margin-top:4px}
+main{max-width:1100px;margin:14px auto}
+#mapwrap{position:relative;height:min(68vh,620px);border-radius:24px;overflow:hidden;border:1px solid #ffffff2a;box-shadow:0 12px 40px #0008}
+#map{position:absolute;inset:0}
+#loc{position:absolute;top:10px;right:10px;z-index:5;background:#000b;backdrop-filter:blur(8px);padding:8px 11px;border-radius:12px;font-size:.75rem;max-width:62%;text-align:right}
+#loc button{margin-top:5px;background:#ffd23d;border:0;border-radius:8px;padding:4px 9px;font-weight:600;cursor:pointer}
+.mk{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font:700 10px/1 system-ui;color:#fff;border:2px solid #fff;cursor:pointer;box-shadow:0 3px 10px #0007;animation:pop .4s}
+.mk.me{width:44px;height:44px;font-size:13px;animation:pulse 2s infinite}
+@keyframes pop{from{transform:scale(0)}}
+@keyframes pulse{50%{box-shadow:0 0 0 12px #ffffff22}}
+#donate{display:block;margin:16px auto;text-align:center;text-decoration:none;color:#fff;font-weight:700;padding:14px 22px;max-width:640px;border-radius:16px;
+background:linear-gradient(90deg,#635bff,#a259ff);box-shadow:0 8px 24px #635bff66;transition:.25s}
+#donate:hover{transform:translateY(-2px);filter:brightness(1.12)}
+#donate small{display:block;font-weight:400;opacity:.85;margin-top:3px}
+#toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));transform:translate(-50%,30px);background:#111e;color:#fff;padding:11px 18px;border-radius:30px;opacity:0;transition:.3s;z-index:99;pointer-events:none;border:1px solid #fff3;text-align:center}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+.modal{position:fixed;inset:0;background:#000a;display:none;place-items:center;z-index:50;padding:16px}
+.modal.open{display:grid;animation:fade .25s}
+@keyframes fade{from{opacity:0}}
+.box{background:#1b1e3a;border:1px solid #fff3;border-radius:20px;padding:20px;width:min(380px,100%)}
+#msgs{height:200px;overflow:auto;background:#0004;border-radius:12px;padding:8px;margin:10px 0;font-size:.85rem}
+#msgs div{margin:4px 0;padding:6px 10px;border-radius:12px;background:#ffffff1c;width:fit-content;max-width:85%}
+#msgs .me{margin-left:auto;background:#635bff}
+.row{display:flex;gap:8px}.row input{flex:1;padding:10px;border-radius:10px;border:1px solid #fff3;background:#0005;color:#fff}
+.btn{background:#635bff;color:#fff;border:0;border-radius:10px;padding:10px 14px;cursor:pointer;font-weight:600}
+</style>
+</head>
+<body>
+<header><h1>♥ love.s111.com</h1><span id="net">p2p: starting…</span></header>
+
+<nav>
+  <button class="c" id="c1" data-tip="love.s111.com" aria-label="logo"></button>
+  <button class="c" id="c2" data-tip="I am man"></button>
+  <button class="c" id="c3" data-tip="I am above or below 35">&lt;35</button>
+  <button class="c" id="c4" data-tip="Exploring">🔍</button>
+  <button class="c" id="c5" data-tip="register with google">G</button>
+  <button class="c" id="c6" data-tip="selfie">📷</button>
+  <button class="c" id="c7" data-tip="my permanent ID">ID</button>
+  <div id="info">WhatsApp phone<br><small>shown after registration</small></div>
+</nav>
+
+<main>
+  <div id="mapwrap"><div id="map"></div><div id="loc"></div></div>
+  <a id="donate" href="#" target="_blank" rel="noopener">💜 Donate
+    <small>Want to contact everyone within the whole 50×50 km map? Donate — otherwise only users within 20 km.</small></a>
+</main>
+
+<div class="modal" id="gm"><div class="box"><h3 style="margin-top:0">Register with Google</h3><div id="gbtn"></div>
+  <p style="font-size:.75rem;opacity:.7">Only Google accounts can register.</p><button class="btn" onclick="gm.classList.remove('open')">Close</button></div></div>
+<div class="modal" id="cm"><div class="box"><b id="ct"></b><div id="msgs"></div>
+  <div class="row"><input id="ci" placeholder="Message…" maxlength="300"><button class="btn" id="cs">Send</button></div>
+  <p><button class="btn" style="background:#444" onclick="cm.classList.remove('open')">Close</button></p></div></div>
+<input type="file" id="selfie" accept="image/*" capture="user" hidden>
+<div id="toast"></div>
+
+<script type="module">
+/* ================= CONFIG ================= */
+const GOOGLE_CLIENT_ID = 'YOUR_CLIENT_ID.apps.googleusercontent.com'; // https://console.cloud.google.com → OAuth Web client, origin https://love.s111.com
+const STRIPE_LINK      = 'https://buy.stripe.com/YOUR_LINK';           // Stripe Payment Link (set success URL to https://love.s111.com/?donated=1)
+const RELAYS = [ /* '/dns4/relay.s111.com/tcp/443/wss/p2p/12D3Koo...' */ ];  // libp2p circuit-relay-v2 + gossipsub bootstrap nodes (wss)
+const TOPIC='love.s111.com/presence', BOX_KM=25, RADIUS_KM=20, WEEK=7*864e5;
+
+/* ================= HELPERS ================= */
+const $=id=>document.getElementById(id), LS=(k,v)=>v===undefined?JSON.parse(localStorage.getItem('l_'+k)||'null'):localStorage.setItem('l_'+k,JSON.stringify(v));
+let tt; const toast=m=>{const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('show'),2400)};
+const km=(a,b,c,d)=>{const r=Math.PI/180,x=(c-a)*r,y=(d-b)*r*Math.cos((a+c)*r/2);return 6371*Math.hypot(x,y)};
+$('donate').href=STRIPE_LINK;
+if(new URLSearchParams(location.search).get('donated')){LS('donated',true);history.replaceState(null,'','/')}
+
+/* ================= STATE ================= */
+let S=LS('state')||{female:false,above:false,long:false};
+let U=LS('user');                       // {sub,name,pic,uid,digits,reg,lastMove,lat,lng,phone,selfie}
+const save=()=>{LS('state',S);U&&LS('user',U)};
+const sex=()=>S.female?'F':'M', col=s=>s==='F'?'#f0364f':'#2f7bff';
+
+/* ================= NAV CIRCLES ================= */
+function paint(){
+  const c2=$('c2');c2.classList.toggle('f',S.female);c2.dataset.tip=S.female?'I am female':'I am man';
+  const c3=$('c3');c3.classList.toggle('on',S.above);c3.textContent=S.above?'>35':'<35';c3.dataset.tip=S.above?'I am above 35':'I am above or below 35';
+  const c4=$('c4');c4.classList.toggle('on',S.long);c4.dataset.tip=S.long?'I am interested in long term relation':'Exploring';
+  const img=U&&(U.selfie||U.pic||'s.png');
+  c4.classList.toggle('ph',!!U);c4.style.backgroundImage=img?`url("${img}")`:'';c4.textContent=U?'':(S.long?'❤':'🔍');
+  if(U){$('c5').textContent='✓';$('c5').dataset.tip='registered';
+    $('c7').innerHTML=U.name.slice(0,4).toUpperCase()+'<br>'+U.digits;$('c7').dataset.tip='my permanent ID';
+    $('info').innerHTML=`📱 WhatsApp<input id="ph" placeholder="+61…" value="${U.phone||''}">`;
+    $('ph').onchange=e=>{U.phone=e.target.value.trim();save();toast('Phone saved')};}
+  drawMe();
+}
+$('c2').onclick=()=>{S.female=!S.female;save();toast(S.female?'I am female':'I am man');paint();announce();render()};
+$('c3').onclick=()=>{S.above=!S.above;save();toast(S.above?'I am above 35':'I am below 35');paint()};
+$('c4').onclick=()=>{S.long=!S.long;save();toast(S.long?'I am interested in long term relation':'Exploring');paint()};
+$('c5').onclick=()=>{if(U)return toast('Already registered ✓');
+  if(GOOGLE_CLIENT_ID.startsWith('YOUR_')){const n=prompt('DEV MODE (no Google client id set). Your first name?');if(n)register({sub:'dev-'+n,given_name:n,name:n,picture:''});return}
+  $('gm').classList.add('open')};
+$('c6').onclick=()=>$('selfie').click();
+$('selfie').onchange=e=>{const f=e.target.files[0];if(!f)return;const im=new Image();im.onload=()=>{const c=document.createElement('canvas');c.width=c.height=160;const s=Math.min(im.width,im.height);
+  c.getContext('2d').drawImage(im,(im.width-s)/2,(im.height-s)/2,s,s,0,0,160,160);if(U){U.selfie=c.toDataURL('image/jpeg',.7);save();paint();toast('Selfie updated')}else toast('Register first')};im.src=URL.createObjectURL(f)};
+$('c7').onclick=()=>toast(U?'Your permanent ID: '+$('c7').innerText.replace('\n',' '):'Register first');
+
+/* ================= GOOGLE LOGIN ================= */
+function gInit(){
+  if(!window.google||GOOGLE_CLIENT_ID.startsWith('YOUR_'))return setTimeout(gInit,800);
+  google.accounts.id.initialize({client_id:GOOGLE_CLIENT_ID,callback:r=>{
+    const p=JSON.parse(decodeURIComponent(escape(atob(r.credential.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')))));register(p)}});
+  google.accounts.id.renderButton($('gbtn'),{theme:'filled_blue',size:'large',shape:'pill'});
+}
+gInit();
+function register(p){
+  const old=LS('acct_'+p.sub);
+  U=old||{sub:p.sub,uid:crypto.randomUUID(),digits:String(1000+crypto.getRandomValues(new Uint32Array(1))[0]%9000),reg:Date.now(),lastMove:0};
+  U.name=(p.given_name||p.name||'USER');U.pic=p.picture||'';LS('acct_'+p.sub,U);save();
+  $('gm').classList.remove('open');toast('Welcome '+U.name+' ♥');paint();locate();announce();render();
+}
+$('c1').onclick=()=>toast('love.s111.com');
+
+/* ================= MAP ================= */
+let pos=LS('pos')||{lat:-33.8688,lng:151.2093};   // default Sydney until GPS answers
+const map=new maplibregl.Map({container:'map',style:'https://tiles.openfreemap.org/styles/liberty',center:[pos.lng,pos.lat],zoom:9.3,attributionControl:{compact:true}});
+map.addControl(new maplibregl.NavigationControl({showCompass:false}),'bottom-right');
+let meMk=null,ready=false;
+const dLat=()=>BOX_KM/111, dLng=()=>BOX_KM/(111*Math.cos(pos.lat*Math.PI/180));
+const circle=(r)=>({type:'Feature',geometry:{type:'Polygon',coordinates:[Array.from({length:65},(_,i)=>{const a=i/64*2*Math.PI;return[pos.lng+r/(111*Math.cos(pos.lat*Math.PI/180))*Math.cos(a),pos.lat+r/111*Math.sin(a)]})]}});
+const square=()=>({type:'Feature',geometry:{type:'Polygon',coordinates:[[[pos.lng-dLng(),pos.lat-dLat()],[pos.lng+dLng(),pos.lat-dLat()],[pos.lng+dLng(),pos.lat+dLat()],[pos.lng-dLng(),pos.lat+dLat()],[pos.lng-dLng(),pos.lat-dLat()]]]}});
+map.on('load',()=>{ready=true;
+  map.addSource('sq',{type:'geojson',data:square()});map.addSource('rad',{type:'geojson',data:circle(RADIUS_KM)});
+  map.addLayer({id:'sqf',type:'fill',source:'sq',paint:{'fill-color':'#a259ff','fill-opacity':0}});
+  map.addLayer({id:'sql',type:'line',source:'sq',paint:{'line-color':'#a259ff','line-width':2,'line-dasharray':[3,2]}});
+  map.addLayer({id:'radf',type:'fill',source:'rad',paint:{'fill-color':'#ffd23d','fill-opacity':.22}});
+  map.addLayer({id:'radl',type:'line',source:'rad',paint:{'line-color':'#ff8a1f','line-width':3}});
+  refreshMap()});
+function refreshMap(){if(!ready)return;map.getSource('sq').setData(square());map.getSource('rad').setData(circle(RADIUS_KM));
+  map.setPaintProperty('sqf','fill-opacity',LS('donated')?.18:0);
+  map.setMaxBounds([[pos.lng-dLng()*1.1,pos.lat-dLat()*1.1],[pos.lng+dLng()*1.1,pos.lat+dLat()*1.1]]);map.setMinZoom(8.2)}
+function mk(t,c,cls=''){const e=document.createElement('div');e.className='mk '+cls;e.style.background=c;e.textContent=t;return e}
+function drawMe(){if(!ready&&!map.loaded()){map.once('load',drawMe);return}
+  meMk&&meMk.remove();meMk=new maplibregl.Marker({element:mk('me',col(sex()),'me')}).setLngLat([pos.lng,pos.lat]).addTo(map);
+  meMk.getElement().title=''}
+function locate(first){
+  if(LS('pos')&&!first){return}
+  navigator.geolocation?.getCurrentPosition(g=>{pos={lat:g.coords.latitude,lng:g.coords.longitude};LS('pos',pos);
+    map.jumpTo({center:[pos.lng,pos.lat],zoom:9.3});drawMe();refreshMap();announce();render();locInfo()},
+    ()=>toast('GPS denied – using default location'),{enableHighAccuracy:true,timeout:10000});
+}
+let moving=false;
+function locInfo(){const L=$('loc');
+  if(!U){L.innerHTML='Register to enable location';return}
+  const next=(U.lastMove||U.reg)+WEEK,ok=Date.now()>=next;
+  L.innerHTML=`Your location could be changed on:<br><b>${new Date(next).toLocaleDateString(undefined,{day:'numeric',month:'short',year:'numeric'})}</b>`+
+   (ok?`<br><button id="mv">${moving?'Tap the map…':'Change location'}</button>`:'');
+  if(ok)$('mv').onclick=()=>{moving=true;toast('Tap the new location on the map');locInfo()};
+}
+map.on('click',e=>{if(!moving||!U)return;moving=false;U.lastMove=Date.now();save();LS('acct_'+U.sub,U);
+  pos={lat:e.lngLat.lat,lng:e.lngLat.lng};LS('pos',pos);map.jumpTo({center:[pos.lng,pos.lat]});drawMe();refreshMap();announce();render();locInfo();toast('Location changed – next change in 1 week')});
+
+/* ================= P2P (libp2p) ================= */
+const peers=new Map(), enc=new TextEncoder(), dec=new TextDecoder(); let bus;
+const myTopic=()=>'love.s111.com/dm/'+(U?.uid||'');
+async function startP2P(){
+  try{
+    if(!RELAYS.length)throw new Error('no relays configured');
+    const V='https://esm.sh/';
+    const [{createLibp2p},{webSockets},{webRTC},{circuitRelayTransport},{identify},{bootstrap},{gossipsub},{noise},{yamux}]=await Promise.all([
+      import(V+'libp2p@2.8.5'),import(V+'@libp2p/websockets@9.2.12'),import(V+'@libp2p/webrtc@5.2.14'),import(V+'@libp2p/circuit-relay-v2@3.2.14'),
+      import(V+'@libp2p/identify@3.0.31'),import(V+'@libp2p/bootstrap@11.0.35'),import(V+'@chainsafe/libp2p-gossipsub@14.1.1'),
+      import(V+'@chainsafe/libp2p-noise@16.1.3'),import(V+'@chainsafe/libp2p-yamux@7.0.1')]);
+    const node=await createLibp2p({addresses:{listen:['/p2p-circuit','/webrtc']},
+      transports:[webSockets(),webRTC(),circuitRelayTransport()],connectionEncrypters:[noise()],streamMuxers:[yamux()],
+      connectionGater:{denyDialMultiaddr:()=>false},peerDiscovery:[bootstrap({list:RELAYS})],
+      services:{identify:identify(),pubsub:gossipsub({allowPublishToZeroTopicPeers:true,emitSelf:false})}});
+    const ps=node.services.pubsub;
+    ps.addEventListener('message',e=>{try{onMsg(e.detail.topic,JSON.parse(dec.decode(e.detail.data)))}catch{}});
+    ps.subscribe(TOPIC);
+    bus={pub:(t,o)=>ps.publish(t,enc.encode(JSON.stringify(o))).catch(()=>{}),sub:t=>ps.subscribe(t)};
+    const n=()=>$('net').textContent='p2p: '+node.getPeers().length+' peers';node.addEventListener('peer:connect',n);node.addEventListener('peer:disconnect',n);n();
+  }catch(err){            // fallback: same-browser tabs only (demo)
+    console.warn('libp2p unavailable →',err.message);$('net').textContent='p2p: local demo (set RELAYS)';
+    const bc=new BroadcastChannel('love-demo');bc.onmessage=e=>onMsg(e.data.t,e.data.o);
+    bus={pub:(t,o)=>bc.postMessage({t,o}),sub(){}};
+  }
+  if(U)bus.sub(myTopic());announce();
+}
+function announce(){if(!bus||!U)return;
+  bus.pub(TOPIC,{k:'p',uid:U.uid,code:U.name.slice(0,4).toUpperCase()+U.digits,sex:sex(),lat:+pos.lat.toFixed(2),lng:+pos.lng.toFixed(2),t:Date.now()})}
+setInterval(announce,15000);
+function onMsg(t,m){
+  if(m.k==='p'&&U&&m.uid!==U.uid){peers.set(m.uid,m);render()}
+  else if(m.k==='m'&&U&&t===myTopic()){addMsg(m.from,m.text,false);if(chatWith!==m.from){toast('💬 '+(peers.get(m.from)?.code||'New message'))}}
+}
+/* ================= PEERS ON MAP ================= */
+const mks=new Map();
+function render(){
+  const now=Date.now();
+  for(const [id,p] of peers){if(now-p.t>45000){peers.delete(id)}}
+  for(const [id,m] of mks){if(!peers.has(id)){m.remove();mks.delete(id)}}
+  if(!U)return;
+  for(const [id,p] of peers){
+    const d=km(pos.lat,pos.lng,p.lat,p.lng),inBox=Math.abs(p.lat-pos.lat)<=dLat()&&Math.abs(p.lng-pos.lng)<=dLng();
+    const vis=p.sex!==sex()&&inBox&&(LS('donated')||d<=RADIUS_KM);
+    if(!vis){mks.get(id)?.remove();mks.delete(id);continue}
+    if(!mks.has(id)){const e=mk(p.code,col(p.sex));e.onclick=()=>openChat(id);
+      mks.set(id,new maplibregl.Marker({element:e}).setLngLat([p.lng,p.lat]).addTo(map))}
+    else mks.get(id).setLngLat([p.lng,p.lat])}
+}
+setInterval(render,10000);
+/* ================= CHAT ================= */
+let chatWith=null;const hist={};
+function addMsg(id,text,mine){(hist[id]??=[]).push({text,mine});if(chatWith===id)drawChat()}
+function drawChat(){$('msgs').innerHTML='';(hist[chatWith]||[]).forEach(m=>{const d=document.createElement('div');d.textContent=m.text;if(m.mine)d.className='me';$('msgs').append(d)});$('msgs').scrollTop=1e9}
+function openChat(id){chatWith=id;$('ct').textContent='💬 '+peers.get(id).code;$('cm').classList.add('open');drawChat();$('ci').focus()}
+$('cm').addEventListener('click',e=>{if(e.target===$('cm'))$('cm').classList.remove('open')});
+$('cs').onclick=()=>{const v=$('ci').value.trim();if(!v||!chatWith)return;bus.pub('love.s111.com/dm/'+chatWith,{k:'m',from:U.uid,text:v});addMsg(chatWith,v,true);$('ci').value=''};
+$('ci').onkeydown=e=>{if(e.key==='Enter')$('cs').click()};
+
+/* ================= BOOT ================= */
+paint();locInfo();if(!LS('pos'))locate(true);if(U){locate()}
+startP2P();
+</script>
+</body>
+</html>
